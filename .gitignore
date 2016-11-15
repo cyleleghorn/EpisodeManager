@@ -1,4 +1,7 @@
 bin/
+aria2c.exe
+downloader-script.bat
+
 
 # Windows image file caches
 Thumbs.db
