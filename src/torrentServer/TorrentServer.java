@@ -6,6 +6,8 @@ import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.prefs.BackingStoreException;
@@ -16,6 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import org.apache.commons.io.FileUtils;
 import net.miginfocom.swing.MigLayout;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
@@ -54,6 +57,7 @@ public class TorrentServer {
 					window.frmEpisodeManager.setVisible(true);
 					AutoUpdate.checkForUpdates("LAUNCH");
 					checkFirstRun();
+					checkDependancies();
 				} catch (Exception e) {
 					System.out.println("The program failed at startup.  Something must have fucked up in the last update.");
 					e.printStackTrace();
@@ -189,8 +193,8 @@ public class TorrentServer {
 		}
 		return online;
 	}
-	
-	private static void checkFirstRun()
+
+	private static void checkFirstRun() throws Exception
 	{
 		if(prefs.getBoolean("FIRST RUN", true))
 		{
@@ -202,6 +206,32 @@ public class TorrentServer {
 			// This runs on subsequent launches of the program.
 		}
 	}
+
+	private static void checkDependancies()
+	{
+		try
+		{
+			if(!new File("aria2c.exe").exists())
+			{
+				System.out.println("Needs aria2c.exe");
+				URL inputUrl = TorrentServer.class.getResource("/res/aria2c.exe");
+				File dest = new File("aria2c.exe");
+				FileUtils.copyURLToFile(inputUrl, dest);
+			}
+			if(!new File("downloader-script.bat").exists())
+			{
+				System.out.println("Needs downloader-script.bat");
+				URL inputUrl = TorrentServer.class.getResource("/res/downloader-script.bat");
+				File dest = new File("downloader-script.bat");
+				FileUtils.copyURLToFile(inputUrl, dest);
+			}
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
 }
 
 class ConnectivityChecker extends Thread
