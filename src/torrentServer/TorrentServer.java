@@ -50,11 +50,12 @@ public class TorrentServer {
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
+			@Override
 			@SuppressWarnings("static-access")
 			public void run() {
 				try {
 					TorrentServer window = new TorrentServer();
-					window.frmEpisodeManager.setVisible(true);
+					TorrentServer.frmEpisodeManager.setVisible(true);
 					AutoUpdate.checkForUpdates("LAUNCH");
 					checkFirstRun();
 					checkDependancies();
@@ -129,6 +130,7 @@ public class TorrentServer {
 		
 		//Make ActionListeners for menu items.
 		portMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
 				String newPort = (String) JOptionPane.showInputDialog(frmEpisodeManager, "Please enter the port you want the server to listen on.", "Port", JOptionPane.QUESTION_MESSAGE, null, null, prefs.getInt("PORT", port));
@@ -151,6 +153,7 @@ public class TorrentServer {
 		});
 		
 		aboutMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e)
 			{
 				JOptionPane.showMessageDialog(frmEpisodeManager, 		  "This program is meant to pair with the Remote Torrent Client\n"

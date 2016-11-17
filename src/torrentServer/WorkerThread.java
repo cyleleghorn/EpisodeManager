@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.List;
-
 import javax.swing.SwingUtilities;
+import torrentServer.TorrentSearcher;
 
 public class WorkerThread implements Runnable
 {
@@ -43,6 +43,7 @@ public class WorkerThread implements Runnable
 			//JOptionPane.showMessageDialog(null, "workerSocket was closed.");
 			
 			SwingUtilities.invokeLater(new Runnable(){
+				@Override
 				public void run(){
 					TorrentServer.logTextArea.repaint();
 					//MainWindow.scroller.setSize(MainWindow.scroller.getPreferredSize().width+50, MainWindow.scroller.getPreferredSize().height);
