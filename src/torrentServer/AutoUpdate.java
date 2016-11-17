@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.Arrays;
 
 import javax.swing.JOptionPane;
 
@@ -15,6 +16,7 @@ public class AutoUpdate
 {
 	private static String data=null;
 	private static String newVersion="0.0.0";
+	private static String[] currentVersion=TorrentServer.version.split(".");
 	
 	public static void checkForUpdates(String callBackLocation)
 	{
@@ -23,7 +25,7 @@ public class AutoUpdate
 			@Override
 			public void run() 
 			{
-				String remoteVersion = "0.0.0";
+				String remoteVersion[] = {"0","0","0"};
 				
 				URL url;
 				try {
@@ -43,7 +45,7 @@ public class AutoUpdate
 			        
 			        data = buffer.toString();
 			        data = data.substring(data.indexOf("id=\"version\">")+13, data.indexOf("</div>"));
-			        remoteVersion = data.substring(1);
+			        remoteVersion = data.substring(1).split(".");
 			        
 				} 
 				catch (IOException e1) 
@@ -53,7 +55,7 @@ public class AutoUpdate
 		        
 				
 				//Make the decision on what to do.
-				if(!remoteVersion.equals("0.0.0") && remoteVersion.equals(TorrentServer.version))
+				if(!Arrays.equals(remoteVersion, new String[] {"0","0","0"}) && remoteVersion.equals(TorrentServer.version))
 				{
 					if(callBackLocation.equals("LAUNCH"))
 					{
@@ -72,7 +74,7 @@ public class AutoUpdate
 					if(updateOrNah==0)
 					{
 						//true; update
-						newVersion = remoteVersion;
+						newVersion = remoteVersion[0].concat(remoteVersion[1]).concat(remoteVersion[2]); //Change this to add dots into the version number.
 						update();
 					}
 					else
@@ -117,6 +119,12 @@ public class AutoUpdate
 		
 		//close it all out now.
 		System.exit(0);
+	}
+	
+	private static boolean needsUpdate(String remoteVersion)
+	{
+		
+		return true;
 	}
 	
 	private static void createBatch()
