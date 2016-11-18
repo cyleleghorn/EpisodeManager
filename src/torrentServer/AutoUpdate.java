@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.Arrays;
 
 import javax.swing.JOptionPane;
 
@@ -14,7 +15,10 @@ import org.apache.commons.io.FileUtils;
 public class AutoUpdate 
 {
 	private static String data=null;
-	private static double newVersion=0.0;
+	private static String newVersion="0.0.0";
+	private static String[] currentVersion=TorrentServer.version.split("\\.");
+	private static String[] remoteVersion = new String[]{"0","0","0"};
+
 	
 	public static void checkForUpdates(String callBackLocation)
 	{
@@ -23,7 +27,6 @@ public class AutoUpdate
 			@Override
 			public void run() 
 			{
-				double remoteVersion = 0.0;
 				
 				URL url;
 				try {
@@ -43,17 +46,15 @@ public class AutoUpdate
 			        
 			        data = buffer.toString();
 			        data = data.substring(data.indexOf("id=\"version\">")+13, data.indexOf("</div>"));
-			        remoteVersion = Double.parseDouble(data.substring(1));
-			        
+			        remoteVersion = data.substring(1).split("\\.");
 				} 
 				catch (IOException e1) 
 				{
 					e1.printStackTrace();
 				}
 		        
-				
 				//Make the decision on what to do.
-				if(remoteVersion!=0.0 && remoteVersion==TorrentServer.version)
+				if(!Arrays.equals(remoteVersion, new String[]{"0","0","0"}) && Arrays.equals(remoteVersion, TorrentServer.version.split("\\.")))
 				{
 					if(callBackLocation.equals("LAUNCH"))
 					{
@@ -64,26 +65,30 @@ public class AutoUpdate
 						JOptionPane.showMessageDialog(TorrentServer.frmEpisodeManager, "You have the latest version!", "Up to date", JOptionPane.INFORMATION_MESSAGE);
 					}
 				}
-				else if(remoteVersion!=0.0 && remoteVersion>TorrentServer.version)
+				else if(!Arrays.equals(remoteVersion, new String[]{"0","0","0"}) && !Arrays.equals(remoteVersion, TorrentServer.version.split("\\.")))
 				{
-					System.out.println("You do not have the latest version.  Please update");
-					int updateOrNah = JOptionPane.showConfirmDialog(TorrentServer.frmEpisodeManager, "There is a new version available! Do you wish to update?\nYour version: V" + TorrentServer.version + "\nLatest version: V" + remoteVersion, "Please Update", JOptionPane.YES_NO_OPTION);
-					
-					if(updateOrNah==0)
+					if(needsUpdate())  //Actually check to see if the remoteVersion is bigger.
 					{
-						//true; update
-						newVersion = remoteVersion;
-						update();
+						System.out.println("You do not have the latest version.  Please update");
+						int updateOrNah = JOptionPane.showConfirmDialog(TorrentServer.frmEpisodeManager, "There is a new version available! Do you wish to update?\nYour version: V" + TorrentServer.version + "\nLatest version: V" + remoteVersion[0] + "." + remoteVersion[1] + "." + remoteVersion[2], "Please Update", JOptionPane.YES_NO_OPTION);
+						
+						if(updateOrNah==0)
+						{
+							//true; update
+							newVersion = remoteVersion[0] + "." + remoteVersion[1] + "." + remoteVersion[2]; 
+							update();
+						}
+						else
+						{
+							//They don't want to update. Fuck em.
+						}
 					}
-					else
-					{
-						//They don't want to update. Fuck em.
-					}
+					else{System.out.println("Your version is higher than the server version.");}
 				}
-				else if(remoteVersion==0.0)
+				else if(Arrays.equals(remoteVersion, new String[]{"0","0","0"}))
 				{
 					System.out.println("There was an error contacting the update server.");
-					JOptionPane.showMessageDialog(TorrentServer.frmEpisodeManager, "Could not check for latest version!\nThis probably means that the rest of the program won't work either.\nCheck your connection and try again.", "Update Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(TorrentServer.frmEpisodeManager, "Could not check for latest version!\nThe update server may be offline. Check your connection and try again.", "Update Error", JOptionPane.ERROR_MESSAGE);
 				}				
 			}
 		};
@@ -97,7 +102,7 @@ public class AutoUpdate
 		
 		//Download the new jar file
 		try {
-			FileUtils.copyURLToFile(new URL("http://islandpi.noip.me:8080/torrentclient/update.jar"), new File("update.jar"));
+			FileUtils.copyURLToFile(new URL("http://islandpi.noip.me:8080/torrentserver/update.jar"), new File("update.jar"));
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(TorrentServer.frmEpisodeManager, "Download failed!", "Error", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
@@ -117,6 +122,22 @@ public class AutoUpdate
 		
 		//close it all out now.
 		System.exit(0);
+	}
+	
+	private static boolean needsUpdate()
+	{
+		for(int i=0; i<3; i++)
+		{
+			if(Integer.parseInt(remoteVersion[i]) > Integer.parseInt(currentVersion[i]))
+			{
+				return true;
+			}
+			else if(Integer.parseInt(remoteVersion[i]) < Integer.parseInt(currentVersion[i]))
+			{
+				return false;
+			}
+		}
+		return false;
 	}
 	
 	private static void createBatch()

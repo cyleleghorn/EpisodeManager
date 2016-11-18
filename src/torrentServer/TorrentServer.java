@@ -33,7 +33,7 @@ public class TorrentServer {
 	private static JLabel connectionsLabel = new JLabel("0");
 	public static JTextArea logTextArea = new JTextArea();
 	public static JScrollPane scroller = new JScrollPane(logTextArea);
-	public static double version = 1.2;
+	public static String version = "1.3.0";
 	private final JMenuBar menuBar = new JMenuBar();
 	private final JMenu mnOptions = new JMenu("Options");
 	private final JMenu mnHelp = new JMenu("Help");
@@ -51,10 +51,9 @@ public class TorrentServer {
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			@Override
-			@SuppressWarnings("static-access")
 			public void run() {
 				try {
-					TorrentServer window = new TorrentServer();
+					new TorrentServer();
 					TorrentServer.frmEpisodeManager.setVisible(true);
 					AutoUpdate.checkForUpdates("LAUNCH");
 					checkFirstRun();
@@ -149,6 +148,15 @@ public class TorrentServer {
 					}
 					JOptionPane.showMessageDialog(frmEpisodeManager, "You should probably restart the program now to avoid\nit still listening for the next connection on the old port.", "Please Restart", JOptionPane.WARNING_MESSAGE);
 				}
+			}
+		});
+		
+		
+		checkForUpdatesMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				AutoUpdate.checkForUpdates("MENU");
 			}
 		});
 		
