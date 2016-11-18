@@ -151,6 +151,15 @@ public class TorrentServer {
 			}
 		});
 		
+		
+		checkForUpdatesMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				AutoUpdate.checkForUpdates("MENU");
+			}
+		});
+		
 		aboutMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e)
