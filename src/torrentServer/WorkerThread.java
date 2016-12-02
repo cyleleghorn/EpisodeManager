@@ -74,7 +74,7 @@ public class WorkerThread implements Runnable
 			
 			TorrentServer.logTextArea.append("New download initiating!!\n");
 			TorrentServer.logTextArea.append("Type: " + messageArray[0] + "\n");
-			TorrentServer.logTextArea.append("Title: " + messageArray[1] + "\n\n\n");
+			TorrentServer.logTextArea.append("Title: " + messageArray[1] + "\n\n");
 			
 
 			//String command = "cmd D:/Media/aria2/downloader-script.bat " + messageArray[0] + " " + "\"" + messageArray[1] + "\"";
