@@ -33,7 +33,7 @@ public class TorrentServer {
 	private static JLabel connectionsLabel = new JLabel("0");
 	public static JTextArea logTextArea = new JTextArea();
 	public static JScrollPane scroller = new JScrollPane(logTextArea);
-	public static String version = "1.3.0";
+	public static String version = "1.3.1";
 	private final JMenuBar menuBar = new JMenuBar();
 	private final JMenu mnOptions = new JMenu("Options");
 	private final JMenu mnHelp = new JMenu("Help");
