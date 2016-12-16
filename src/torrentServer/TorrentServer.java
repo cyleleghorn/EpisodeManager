@@ -1,9 +1,12 @@
 package torrentServer;
 
+import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.SystemTray;
 import java.awt.Toolkit;
+import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -15,77 +18,93 @@ import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.apache.commons.io.FileUtils;
+
 import net.miginfocom.swing.MigLayout;
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 
-public class TorrentServer {
 
-	public static JFrame frmEpisodeManager;
-	public static JLabel onlineLabel = new JLabel("Offline");
-	private final JLabel label1 = new JLabel("Connections so far:");
-	private static JLabel connectionsLabel = new JLabel("0");
-	public static JTextArea logTextArea = new JTextArea();
-	public static JScrollPane scroller = new JScrollPane(logTextArea);
-	public static String version = "1.3.1";
-	private final JMenuBar menuBar = new JMenuBar();
-	private final JMenu mnOptions = new JMenu("Options");
-	private final JMenu mnHelp = new JMenu("Help");
-	private final JMenuItem aboutMenuItem = new JMenuItem("About");
-	private final JMenuItem checkForUpdatesMenuItem = new JMenuItem("Check For Updates");
-	private final JMenuItem portMenuItem = new JMenuItem("Change Listening Port");
-	private final JMenuItem resetMenuItem = new JMenuItem("Reset Network Settings");
-	public static Preferences prefs;
-	public static int port = 25252;
+public class TorrentServer
+{
 	
-
+	public static JFrame		frmEpisodeManager;
+	public static JLabel		onlineLabel				= new JLabel("Offline");
+	private final JLabel		label1					= new JLabel("Connections so far:");
+	private static JLabel		connectionsLabel		= new JLabel("0");
+	public static JTextArea		logTextArea				= new JTextArea();
+	public static JScrollPane	scroller				= new JScrollPane(logTextArea);
+	public static String		version					= "1.4.0";
+	private final JMenuBar		menuBar					= new JMenuBar();
+	private final JMenu			mnOptions				= new JMenu("Options");
+	private final JMenu			mnHelp					= new JMenu("Help");
+	private final JMenuItem		aboutMenuItem			= new JMenuItem("About");
+	private final JMenuItem		checkForUpdatesMenuItem	= new JMenuItem("Check For Updates");
+	private final JMenuItem		portMenuItem			= new JMenuItem("Change Listening Port");
+	private final JMenuItem		resetMenuItem			= new JMenuItem("Reset Network Settings");
+	public static Preferences	prefs;
+	public static int			port					= 25252;
+	public static SystemTray	tray					= null;
+	
+	
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
+	public static void main(String[] args)
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
 			@Override
-			public void run() {
-				try {
+			public void run()
+			{
+				try
+				{
 					new TorrentServer();
 					TorrentServer.frmEpisodeManager.setVisible(true);
 					AutoUpdate.checkForUpdates("LAUNCH");
 					checkFirstRun();
 					checkDependancies();
-				} catch (Exception e) {
-					System.out.println("The program failed at startup.  Something must have fucked up in the last update.");
+				}
+				catch (Exception e)
+				{
+					System.out.println(
+							"The program failed at startup.  Something must have fucked up in the last update.");
 					e.printStackTrace();
 				}
 			}
 		});
 	}
-
+	
+	
 	/**
 	 * Create the application.
 	 */
-	public TorrentServer() {
+	public TorrentServer()
+	{
 		initialize();
 	}
-
+	
+	
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() {
+	private void initialize()
+	{
 		frmEpisodeManager = new JFrame();
 		frmEpisodeManager.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frmEpisodeManager.setIconImage(Toolkit.getDefaultToolkit().getImage(TorrentServer.class.getResource("/res/icon.png")));
+		frmEpisodeManager
+				.setIconImage(Toolkit.getDefaultToolkit().getImage(TorrentServer.class.getResource("/res/icon.png")));
 		frmEpisodeManager.setTitle("Episode Manager V" + version);
-
+		
 		frmEpisodeManager.setBounds(100, 100, 400, 350);
 		frmEpisodeManager.getContentPane().setLayout(new MigLayout("", "[grow]", "[][grow]"));
-
-		//lblOffline created here originally.
+		
+		// lblOffline created here originally.
 		onlineLabel.setForeground(Color.RED);
 		onlineLabel.setFont(new Font("Tahoma", Font.PLAIN, 16));
 		frmEpisodeManager.getContentPane().add(onlineLabel, "flowx,cell 0 0,growx");
@@ -114,76 +133,109 @@ public class TorrentServer {
 		
 		mnHelp.add(checkForUpdatesMenuItem);
 		
-		
 		prefs = Preferences.userNodeForPackage(this.getClass());
 		port = prefs.getInt("PORT", port);
 		
-		
-	
 		ConnectivityChecker checker = new ConnectivityChecker();
 		checker.start();
 		
 		Runnable test = new ConnectionAccepter();
 		new Thread(test).start();
 		
+		// Code to set up SystemTray
+		if (SystemTray.isSupported())
+		{
+			tray = SystemTray.getSystemTray();
+		}
 		
-		//Make ActionListeners for menu items.
-		portMenuItem.addActionListener(new ActionListener() {
+		TrayIcon trayIcon = new TrayIcon(
+				Toolkit.getDefaultToolkit().getImage(TorrentServer.class.getResource("/res/icon.png")));
+		trayIcon.setImageAutoSize(true);
+		try
+		{
+			tray.add(trayIcon);
+		}
+		catch (AWTException e2)
+		{
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
+		// Make ActionListeners for menu items.
+		portMenuItem.addActionListener(new ActionListener()
+		{
 			@Override
-			public void actionPerformed(ActionEvent e) 
+			public void actionPerformed(ActionEvent e)
 			{
-				String newPort = (String) JOptionPane.showInputDialog(frmEpisodeManager, "Please enter the port you want the server to listen on.", "Port", JOptionPane.QUESTION_MESSAGE, null, null, prefs.getInt("PORT", port));
-				if(newPort==null){
+				String newPort = (String) JOptionPane.showInputDialog(frmEpisodeManager,
+						"Please enter the port you want the server to listen on.", "Port", JOptionPane.QUESTION_MESSAGE,
+						null, null, prefs.getInt("PORT", port));
+				if (newPort == null)
+				{
 				}
-				else if(newPort.isEmpty()){
+				else if (newPort.isEmpty())
+				{
 				}
-				else{
-					port=Integer.parseInt(newPort);
+				else
+				{
+					port = Integer.parseInt(newPort);
 					prefs.putInt("PORT", port);
-					try {
+					try
+					{
 						prefs.flush();
-					} catch (BackingStoreException e1) {
-						JOptionPane.showMessageDialog(frmEpisodeManager, "There was an error storing the values.  You may need\nto set them again the next time you run the program!", "Options Error", JOptionPane.ERROR_MESSAGE);
+					}
+					catch (BackingStoreException e1)
+					{
+						JOptionPane.showMessageDialog(frmEpisodeManager,
+								"There was an error storing the values.  You may need\nto set them again the next time you run the program!",
+								"Options Error", JOptionPane.ERROR_MESSAGE);
 						e1.printStackTrace();
 					}
-					JOptionPane.showMessageDialog(frmEpisodeManager, "You should probably restart the program now to avoid\nit still listening for the next connection on the old port.", "Please Restart", JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog(frmEpisodeManager,
+							"You should probably restart the program now to avoid\nit still listening for the next connection on the old port.",
+							"Please Restart", JOptionPane.WARNING_MESSAGE);
 				}
 			}
 		});
 		
-		
-		checkForUpdatesMenuItem.addActionListener(new ActionListener() {
+		checkForUpdatesMenuItem.addActionListener(new ActionListener()
+		{
 			@Override
-			public void actionPerformed(ActionEvent e) 
+			public void actionPerformed(ActionEvent e)
 			{
 				AutoUpdate.checkForUpdates("MENU");
 			}
 		});
 		
-		aboutMenuItem.addActionListener(new ActionListener() {
+		aboutMenuItem.addActionListener(new ActionListener()
+		{
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				JOptionPane.showMessageDialog(frmEpisodeManager, 		  "This program is meant to pair with the Remote Torrent Client\n"
-																		+ "program in order to allow people to remotely initiate torrent\n"
-																		+ "downloads into your media server.  It will also eventually manage\n"
-																		+ "your TV shows and automatically download the newest episodes the\n"
-																		+ "day they come out on TV automatically!", "About", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(frmEpisodeManager,
+						"This program is meant to pair with the Remote Torrent Client\n"
+								+ "program in order to allow people to remotely initiate torrent\n"
+								+ "downloads into your media server.  It will also eventually manage\n"
+								+ "your TV shows and automatically download the newest episodes the\n"
+								+ "day they come out on TV automatically!",
+						"About", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		
 	}
 	
+	
 	public static void incrementConnectionsLabel()
 	{
-		connectionsLabel.setText(Integer.toString(Integer.parseInt(connectionsLabel.getText())+1));
+		connectionsLabel.setText(Integer.toString(Integer.parseInt(connectionsLabel.getText()) + 1));
 	}
+	
 	
 	public static boolean checkConnection()
 	{
-		boolean online = false;		
+		boolean online = false;
 		URL url;
-		try 
+		try
 		{
 			url = new URL("http://www.google.com");
 			final URLConnection conn = url.openConnection();
@@ -192,44 +244,46 @@ public class TorrentServer {
 			conn.connect();
 			onlineLabel.setText("Online");
 			onlineLabel.setForeground(Color.BLUE);
-			online=true;
-		} 
-		catch (Exception e) 
+			online = true;
+		}
+		catch (Exception e)
 		{
-			//e.printStackTrace();
+			// e.printStackTrace();
 			onlineLabel.setText("Offline");
 			onlineLabel.setForeground(Color.RED);
-			online=false;
+			online = false;
 			return online;
 		}
 		return online;
 	}
-
+	
+	
 	private static void checkFirstRun() throws Exception
 	{
-		if(prefs.getBoolean("FIRST RUN", true))
+		if (prefs.getBoolean("FIRST RUN", true))
 		{
 			// First run, put installation and configuration here.
 			prefs.putBoolean("FIRST RUN", false);
 		}
-		else if(!prefs.getBoolean("FIRST RUN",  true))
+		else if (!prefs.getBoolean("FIRST RUN", true))
 		{
 			// This runs on subsequent launches of the program.
 		}
 	}
-
+	
+	
 	private static void checkDependancies()
 	{
 		try
 		{
-			if(!new File("aria2c.exe").exists())
+			if (!new File("aria2c.exe").exists())
 			{
 				System.out.println("Needs aria2c.exe");
 				URL inputUrl = TorrentServer.class.getResource("/res/aria2c.exe");
 				File dest = new File("aria2c.exe");
 				FileUtils.copyURLToFile(inputUrl, dest);
 			}
-			if(!new File("downloader-script.bat").exists())
+			if (!new File("downloader-script.bat").exists())
 			{
 				System.out.println("Needs downloader-script.bat");
 				URL inputUrl = TorrentServer.class.getResource("/res/downloader-script.bat");
@@ -237,27 +291,33 @@ public class TorrentServer {
 				FileUtils.copyURLToFile(inputUrl, dest);
 			}
 		}
-		catch(IOException e)
+		catch (IOException e)
 		{
 			e.printStackTrace();
 		}
 	}
-
+	
 }
+
 
 class ConnectivityChecker extends Thread
 {
-	@Override public void run()
+	@Override
+	public void run()
 	{
-		while(true)
+		while (true)
 		{
-			//boolean internetAccess = MainWindow.checkConnection();
-			//if(internetAccess) System.out.println("Internet Status: Connected");
-			//else System.out.println("Internet Status: Not Connected");
+			// boolean internetAccess = MainWindow.checkConnection();
+			// if(internetAccess) System.out.println("Internet Status:
+			// Connected");
+			// else System.out.println("Internet Status: Not Connected");
 			TorrentServer.checkConnection();
-			try{
-				Thread.sleep(1000);}
-			catch(InterruptedException e){
+			try
+			{
+				Thread.sleep(1000);
+			}
+			catch (InterruptedException e)
+			{
 				e.printStackTrace();
 			}
 		}
