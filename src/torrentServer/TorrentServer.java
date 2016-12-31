@@ -4,6 +4,8 @@ import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.Toolkit;
 import java.awt.TrayIcon;
@@ -39,7 +41,7 @@ public class TorrentServer
 	private static JLabel		connectionsLabel		= new JLabel("0");
 	public static JTextArea		logTextArea				= new JTextArea();
 	public static JScrollPane	scroller				= new JScrollPane(logTextArea);
-	public static String		version					= "1.4.0";
+	public static String		version					= "1.5.0";
 	private final JMenuBar		menuBar					= new JMenuBar();
 	private final JMenu			mnOptions				= new JMenu("Options");
 	private final JMenu			mnHelp					= new JMenu("Help");
@@ -47,9 +49,15 @@ public class TorrentServer
 	private final JMenuItem		checkForUpdatesMenuItem	= new JMenuItem("Check For Updates");
 	private final JMenuItem		portMenuItem			= new JMenuItem("Change Listening Port");
 	private final JMenuItem		resetMenuItem			= new JMenuItem("Reset Network Settings");
+	private final JMenuItem		quitMenuItem			= new JMenuItem("Quit");
 	public static Preferences	prefs;
 	public static int			port					= 25252;
-	public static SystemTray	tray					= null;
+	// System tray stuff
+	private SystemTray			tray					= null;
+	private final MenuItem		showTray				= new MenuItem("Show");
+	private final MenuItem		checkUpdatesTray		= new MenuItem("Check for updates");
+	private final MenuItem		quitTray				= new MenuItem("Quit");
+	private final PopupMenu		popup					= new PopupMenu();
 	
 	
 	/**
@@ -96,7 +104,7 @@ public class TorrentServer
 	private void initialize()
 	{
 		frmEpisodeManager = new JFrame();
-		frmEpisodeManager.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frmEpisodeManager.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		frmEpisodeManager
 				.setIconImage(Toolkit.getDefaultToolkit().getImage(TorrentServer.class.getResource("/res/icon.png")));
 		frmEpisodeManager.setTitle("Episode Manager V" + version);
@@ -127,6 +135,8 @@ public class TorrentServer
 		
 		mnOptions.add(resetMenuItem);
 		
+		mnOptions.add(quitMenuItem);
+		
 		menuBar.add(mnHelp);
 		
 		mnHelp.add(aboutMenuItem);
@@ -153,6 +163,10 @@ public class TorrentServer
 		trayIcon.setImageAutoSize(true);
 		try
 		{
+			popup.add(showTray);
+			popup.add(checkUpdatesTray);
+			popup.add(quitTray);
+			trayIcon.setPopupMenu(popup);
 			tray.add(trayIcon);
 		}
 		catch (AWTException e2)
@@ -219,6 +233,54 @@ public class TorrentServer
 								+ "your TV shows and automatically download the newest episodes the\n"
 								+ "day they come out on TV automatically!",
 						"About", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
+		
+		quitMenuItem.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				tray.remove(trayIcon);
+				System.exit(0);
+			}
+		});
+		
+		// Listeners for tray items
+		showTray.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				frmEpisodeManager.setVisible(true);
+			}
+		});
+		
+		checkUpdatesTray.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				AutoUpdate.checkForUpdates("MENU");
+			}
+		});
+		
+		quitTray.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				tray.remove(trayIcon);
+				System.exit(0);
+			}
+		});
+		
+		trayIcon.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				frmEpisodeManager.setVisible(true);
 			}
 		});
 		
