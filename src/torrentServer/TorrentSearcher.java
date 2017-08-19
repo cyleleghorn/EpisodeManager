@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+import javax.swing.JOptionPane;
+
 import org.apache.commons.logging.LogFactory;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
@@ -67,13 +69,17 @@ public class TorrentSearcher
 	@SuppressWarnings("unchecked")
 	public List<List<String>> searchTPB(String query)
 	{
-		query = query.toLowerCase().replace(" ", "%20");
+		String firstQuery = query.toLowerCase().replace(" ", "%20").concat("%201080p");
+		String secondQuery = query.toLowerCase().replace(" ", "%20");
+		
 		List<List<String>> finalList = new ArrayList<List<String>>();
+		
+		//Adding in the 1080p default function
 		
 		try
 		{
 			webClient.getOptions().setJavaScriptEnabled(false);
-			HtmlPage resultsPage = webClient.getPage("https://thepiratebay.org/search/" + query + "/0/99/0");
+			HtmlPage resultsPage = webClient.getPage("https://thepiratebay.org/search/" + firstQuery + "/0/99/0");
 			
 			// Need to get all the tr's inside tbody.
 			List<HtmlTableRow> resultsList = (List<HtmlTableRow>) resultsPage.getByXPath("//tbody/tr");
@@ -131,6 +137,69 @@ public class TorrentSearcher
 			System.out.println("Error with internet connectivity or getting results page.");
 			e.printStackTrace();
 		}
+		
+		if(finalList!=null && !finalList.isEmpty() && !finalList.get(0).isEmpty())
+		{
+			//results must contain data, so return it.
+			return finalList;
+		}
+		else
+		{
+			//repeat the search without the 1080p added in front
+			finalList = new ArrayList<List<String>>();
+			try
+			{
+				webClient.getOptions().setJavaScriptEnabled(false);
+				HtmlPage resultsPage = webClient.getPage("https://thepiratebay.org/search/" + secondQuery + "/0/99/0");
+				
+				// Need to get all the tr's inside tbody.
+				List<HtmlTableRow> resultsList = (List<HtmlTableRow>) resultsPage.getByXPath("//tbody/tr");
+				List<HtmlAnchor> hrefList = (List<HtmlAnchor>) resultsPage
+						.getByXPath("//a[@title='Download this torrent using magnet']");
+				
+				// Create String lists to hold the various values.
+				List<String> titles = new ArrayList<String>();
+				List<String> seeders = new ArrayList<String>();
+				List<String> leechers = new ArrayList<String>();
+				List<String> magnets = new ArrayList<String>();
+				
+				// Extract only the important shit from page 1 of results.
+				for (int i = 0; i < resultsList.size(); i++)
+				{
+					titles.add(resultsList.get(i).getCells().get(1).getChildNodes().get(1).asText());
+					seeders.add(resultsList.get(i).getCells().get(2).getChildNodes().get(0).asText());
+					leechers.add(resultsList.get(i).getCells().get(3).getChildNodes().get(0).asText());
+					magnets.add(hrefList.get(i).getHrefAttribute());
+				}
+				
+				
+				finalList.add(titles);
+				finalList.add(seeders);
+				finalList.add(leechers);
+				finalList.add(magnets);
+				
+			}
+			catch (FailingHttpStatusCodeException e)
+			{
+				// TODO Auto-generated catch block
+				System.out.println("Obscure exception regarding Http Status Code.");
+				e.printStackTrace();
+			}
+			catch (MalformedURLException e)
+			{
+				// TODO Auto-generated catch block
+				System.out.println("Malformed URL Exception.");
+				e.printStackTrace();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				System.out.println("Error with internet connectivity or getting results page.");
+				e.printStackTrace();
+			}
+		}
+		
 		return finalList;
+		
 	}
 }

@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.List;
+
 import javax.swing.SwingUtilities;
-import torrentServer.TorrentSearcher;
 
 
 public class WorkerThread implements Runnable
@@ -82,15 +82,27 @@ public class WorkerThread implements Runnable
 			
 			TorrentServer.logTextArea.append("New download initiating!!\n");
 			TorrentServer.logTextArea.append("Type: " + messageArray[0] + "\n");
-			TorrentServer.logTextArea.append("Title: " + messageArray[1] + "\n\n");
+			TorrentServer.logTextArea.append("Title: " + messageArray[1] + "\n");
+			TorrentServer.logTextArea.append("Hidden: " + TorrentServer.prefs.getBoolean("DOWNLOADHIDDEN", true) + "\n\n");
 			
 			// String command = "cmd D:/Media/aria2/downloader-script.bat " +
 			// messageArray[0] + " " + "\"" + messageArray[1] + "\"";
 			// System.out.println(command);
 			messageArray[2] = "\"" + messageArray[2] + "\"";
 			
-			ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/C", "start",
-					"D:/Media/aria2/downloader-script.bat", messageArray[0], messageArray[2]);
+			ProcessBuilder builder;
+			String batchPath = "downloader-script.bat";
+			
+			if(TorrentServer.prefs.getBoolean("DOWNLOADHIDDEN", true))
+			{
+				builder = new ProcessBuilder("cmd.exe", "/C", "start", "/min", batchPath, messageArray[0], messageArray[2]);
+			}
+			else
+			{
+				builder = new ProcessBuilder("cmd.exe", "/C", "start",
+						batchPath, messageArray[0], messageArray[2]);
+			}
+			
 			try
 			{
 				builder.start();

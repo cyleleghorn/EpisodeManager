@@ -23,6 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -41,7 +42,7 @@ public class TorrentServer
 	private static JLabel		connectionsLabel		= new JLabel("0");
 	public static JTextArea		logTextArea				= new JTextArea();
 	public static JScrollPane	scroller				= new JScrollPane(logTextArea);
-	public static String		version					= "1.5.0";
+	public static String		version					= "1.5.3";
 	private final JMenuBar		menuBar					= new JMenuBar();
 	private final JMenu			mnOptions				= new JMenu("Options");
 	private final JMenu			mnHelp					= new JMenu("Help");
@@ -49,9 +50,11 @@ public class TorrentServer
 	private final JMenuItem		checkForUpdatesMenuItem	= new JMenuItem("Check For Updates");
 	private final JMenuItem		portMenuItem			= new JMenuItem("Change Listening Port");
 	private final JMenuItem		resetMenuItem			= new JMenuItem("Reset Network Settings");
+	private final JCheckBoxMenuItem downloadHiddenMenuItem = new JCheckBoxMenuItem("Start Downloads Hidden");
 	private final JMenuItem		quitMenuItem			= new JMenuItem("Quit");
 	public static Preferences	prefs;
 	public static int			port					= 25252;
+	public static boolean 		downloadHidden 			= true;
 	// System tray stuff
 	private SystemTray			tray					= null;
 	private final MenuItem		showTray				= new MenuItem("Show");
@@ -135,6 +138,8 @@ public class TorrentServer
 		
 		mnOptions.add(resetMenuItem);
 		
+		mnOptions.add(downloadHiddenMenuItem);
+		
 		mnOptions.add(quitMenuItem);
 		
 		menuBar.add(mnHelp);
@@ -145,7 +150,8 @@ public class TorrentServer
 		
 		prefs = Preferences.userNodeForPackage(this.getClass());
 		port = prefs.getInt("PORT", port);
-		
+		downloadHiddenMenuItem.setSelected(prefs.getBoolean("DOWNLOADHIDDEN", true));
+				
 		ConnectivityChecker checker = new ConnectivityChecker();
 		checker.start();
 		
@@ -218,6 +224,21 @@ public class TorrentServer
 			public void actionPerformed(ActionEvent e)
 			{
 				AutoUpdate.checkForUpdates("MENU");
+			}
+		});
+		
+		downloadHiddenMenuItem.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				prefs.putBoolean("DOWNLOADHIDDEN", downloadHiddenMenuItem.isSelected());
+				try {
+					prefs.flush();
+				} catch (BackingStoreException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 		});
 		

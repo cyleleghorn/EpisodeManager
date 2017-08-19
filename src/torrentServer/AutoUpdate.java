@@ -32,7 +32,7 @@ public class AutoUpdate
 				URL url;
 				try
 				{
-					url = new URL("http://islandpi.noip.me:8080/torrentserver/version.html");
+					url = new URL("http://cylessites.ddns.net:8081/torrentserver/version.html");
 					InputStream html = null;
 					
 					html = url.openStream();
@@ -120,7 +120,7 @@ public class AutoUpdate
 		// Download the new jar file
 		try
 		{
-			FileUtils.copyURLToFile(new URL("http://islandpi.noip.me:8080/torrentserver/update.jar"),
+			FileUtils.copyURLToFile(new URL("http://cylessites.ddns.net:8081/torrentserver/update.jar"),
 					new File("update.jar"));
 		}
 		catch (IOException e)
@@ -179,6 +179,10 @@ public class AutoUpdate
 			// JOptionPane.showMessageDialog(null, f.getName());
 			// System.out.println(f.getName());
 			String jarName = f.getName();
+			
+			out.println("echo .");
+			out.println("echo Waiting for old version to close...");
+			out.println("TIMEOUT /T 5");
 			
 			out.println("del \"" + jarName + "\"");
 			
